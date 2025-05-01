@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ramen SIBOX - Premium Ramen</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        /* Custom Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        /* Color Variables */
+        :root {
+            --dark-red: #6B0D0D;
+            --bright-red: #D62828;
+            --orange: #C7531E;
+            --cream: #F4C97D;
+            --black: #000000;
+            --gold: #F5D6A0;
+            --light-gray: #f9f9f9;
+            --white: #ffffff;
+        }
+        
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--black);
+        }
+        
+         /* Header */
+         header {
+            background-color: var(--dark-red);
+            color: var(--gold);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-circle {
+            width: 60px;
+            height: 60px;
+            background-color: var(--dark-red);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo-inner-circle {
+            width: 40px;
+            height: 40px;
+            background-color: var(--orange);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .logo-subtitle {
+            font-size: 0.7rem;
+            color: var(--cream);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin: 2rem 0 3rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2rem;
+            color: var(--dark-red);
+            position: relative;
+            display: inline-block;
+            padding-bottom: 1rem;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--orange);
+        }
+        
+        /* Product Cards */
+        .products {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+        }
+        
+        .product-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            width: 340px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .product-image {
+            height: 220px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .product-card:hover .product-image img {
+            transform: scale(1.1);
+        }
+        
+        .product-tag {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: var(--bright-red);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .product-info {
+            padding: 1.5rem;
+        }
+        
+        .product-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark-red);
+        }
+        
+        .product-description {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--orange);
+        }
+        
+        .product-rating {
+            display: flex;
+            align-items: center;
+            color: #FFD700;
+        }
+        
+        .product-availability {
+            font-size: 0.9rem;
+            color: var(--dark-red);
+            margin-top: 0.5rem;
+        }
+        
+        .order-options {
+            margin-top: 1rem;
+        }
+        
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .quantity-selector label {
+            margin-right: 1rem;
+            font-weight: 500;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .quantity-btn {
+            background-color: #f5f5f5;
+            border: none;
+            width: 36px;
+            height: 36px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            height: 36px;
+            border: none;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            text-align: center;
+            font-size: 1rem;
+        }
+        
+        .addon-selector {
+            margin-bottom: 1rem;
+        }
+        
+        .addon-selector label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .addon-checkbox {
+            margin-right: 0.5rem;
+        }
+        
+        .order-button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--dark-red);
+            color: var(--gold);
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .order-button:hover {
+            background-color: var(--bright-red);
+        }
+        
+        .order-button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+        
+        /* Order Form Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: var(--white);
+            margin: 10% auto;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {transform: translateY(-50px); opacity: 0;}
+            to {transform: translateY(0); opacity: 1;}
+        }
+        
+        .modal-close {
+            float: right;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .modal-close:hover {
+            color: var(--bright-red);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-red);
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: var(--white);
+        }
+        
+        .form-submit {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--dark-red);
+            color: var(--gold);
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 1rem;
+        }
+        
+        .form-submit:hover {
+            background-color: var(--bright-red);
+        }
+        
+        .order-summary {
+            background-color: var(--light-gray);
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .summary-total {
+            font-weight: 700;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 2px dashed #ddd;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark-red);
+            color: var(--cream);
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .copyright {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        /* Cart Styles */
+        .cart-container {
+            position: relative;
+        }
+
+        .cart-icon {
+            color: var(--cream);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cart-count {
+            background-color: var(--bright-red);
+            color: var(--white);
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 50%;
+        }
+
+        .cart-preview {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 1rem;
+            display: none;
+            z-index: 1000;
+        }
+
+        .cart-preview.active {
+            display: block;
+        }
+
+        .cart-items {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item-info {
+            flex: 1;
+            padding: 0 1rem;
+        }
+
+        .cart-item-title {
+            font-weight: 600;
+            color: var(--dark-red);
+        }
+
+        .cart-item-price {
+            color: var(--orange);
+        }
+
+        .cart-item-remove {
+            color: var(--bright-red);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin: 1rem 0;
+            padding-top: 1rem;
+            border-top: 2px dashed #ddd;
+        }
+
+        .checkout-button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--dark-red);
+            color: var(--gold);
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .checkout-button:hover {
+            background-color: var(--bright-red);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--dark-red);
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .loading-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .logo-text {
+                font-size: 1.2rem;
+            }
+            
+            .logo-circle {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .logo-inner-circle {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .modal-content {
+                margin: 20% auto;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-circle">
+                <div class="logo-inner-circle">
+                    <img src="images/logo.png" class="logo-image" alt="Ramen SIBOX Logo">
+                </div>
+            </div>
+            <div>
+                <div class="logo-text">RAMEN SIBOX</div>
+                <div class="logo-subtitle">Premium Ramen Est. 2024</div>
+            </div>
+        </div>
+        <div class="cart-container">
+            <div class="cart-icon" onclick="toggleCart()">
+                🛒 <span class="cart-count">0</span>
+            </div>
+            <div class="cart-preview" id="cartPreview">
+                <div class="cart-items" id="cartItems"></div>
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotal">RM 0</span>
+                </div>
+                <button class="checkout-button" onclick="openOrderModal()">Checkout</button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="section-title">
+            <h2>Our Premium Ramen</h2>
+        </div>
+        
+        <div class="products" id="productContainer">
+            <!-- Products will be loaded from Firebase -->
+            <div class="spinner" id="productsSpinner" style="display: block;"></div>
+        </div>
+    </div>
+    
+    <!-- Order Form Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeOrderModal()">&times;</span>
+            <h2 class="modal-title">Complete Your Order</h2>
+            
+            <div class="order-summary">
+                <div class="summary-item">
+                    <span>Product:</span>
+                    <span id="summary-product"></span>
+                </div>
+                <div class="summary-item">
+                    <span>Quantity:</span>
+                    <span id="summary-quantity"></span>
+                </div>
+                <div class="summary-item" id="summary-addons-container">
+                    <span>Preparation:</span>
+                    <span id="summary-addons"></span>
+                </div>
+                <div class="summary-item summary-total">
+                    <span>Total:</span>
+                    <span id="summary-total"></span>
+                </div>
+            </div>
+            
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="customer-name">Your Name</label>
+                    <input type="text" id="customer-name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="room-number">Room Number (if applicable)</label>
+                    <input type="text" id="room-number" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="payment-type">Payment Method</label>
+                    <select id="payment-type" class="form-select" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="Online">Online</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="order-type">Order Type</label>
+                    <select id="order-type" class="form-select" required>
+                        <option value="Dine-In">Dine-In</option>
+                        <option value="Takeaway">Takeaway</option>
+                        <option value="Delivery">Delivery</option>
+                    </select>
+                </div>
+                
+                <div class="spinner" id="orderSpinner"></div>
+                <button type="button" class="form-submit" id="submitOrderButton" onclick="submitOrder()">Place Order</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-container">
+            <div class="spinner" style="display: block;"></div>
+            <p>Processing your order...</p>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="copyright">
+            &copy; 2025 Ramen SIBOX. All Rights Reserved.
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Firebase with the compat version
+        const firebaseConfig = {
+            apiKey: "AIzaSyBi03pGrUkrulFjIUe6Pd9KC3CZz-AvpBI",
+            authDomain: "ramen-sibox-2b0d7.firebaseapp.com",
+            projectId: "ramen-sibox-2b0d7",
+            storageBucket: "ramen-sibox-2b0d7.firebasestorage.app",
+            messagingSenderId: "182662563425",
+            appId: "1:182662563425:web:ea3ab8faf2a2c30d29cc20"
+        };
+
+        // Initialize Firebase using the compat version
+        firebase.initializeApp(firebaseConfig);
+        
+        // Get a Firestore instance
+        const db = firebase.firestore();
+        
+        // Global variables
+        let cart = [];
+        let cartTotal = 0;
+        let inventoryData = {};
+        
+        // DOM elements
+        const productContainer = document.getElementById('productContainer');
+        const productsSpinner = document.getElementById('productsSpinner');
+        
+        // Load inventory data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInventory();
+        });
+        
+        // Load inventory data from Firestore
+        async function loadInventory() {
+            try {
+                productsSpinner.style.display = "block";
+                productContainer.innerHTML = '';
+                
+                // Use the compat version syntax
+                const inventorySnapshot = await db.collection("Inventory").get();
+                
+                if (inventorySnapshot.empty) {
+                    productContainer.innerHTML = '<p>No products available at the moment.</p>';
+                    productsSpinner.style.display = "none";
+                    return;
+                }
+                
+                inventoryData = {};
+                inventorySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    inventoryData[doc.id] = {
+                        id: doc.id,
+                        name: data.name,
+                        price: data.price,
+                        quantity: data.quantity,
+                        description: data.description || "",
+                        image: data.image || "placeholder.jpg",
+                        tag: data.tag || ""
+                    };
+                });
+                
+                // Render products
+                renderProducts();
+            } catch (error) {
+                console.error("Error loading inventory:", error);
+                productContainer.innerHTML = `<p>Error loading products: ${error.message}</p>`;
+            } finally {
+                productsSpinner.style.display = "none";
+            }
+        }
+        
+        // Render products from inventory data
+        function renderProducts() {
+            productContainer.innerHTML = '';
+            
+            Object.values(inventoryData).forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product-card';
+                productElement.setAttribute('data-product-id', product.id);
+                
+                const preparationOptions = [
+                    { id: 'packaging', label: 'Packaging', price: 0 },
+                    { id: 'masak', label: 'Masak', price: 1 },
+                    { id: 'masak-telur', label: 'Masak + Telur', price: 2 }
+                ];
+                
+                const optionsHtml = preparationOptions.map((option, index) => `
+                    <div class="addon-option">
+                        <label>
+                            <input type="radio" id="${option.id}-${product.id}" name="addon-${product.id}" class="addon-radio" 
+                                value="${option.id}" ${index === 0 ? 'checked' : ''}>
+                            ${option.label} (+RM${option.price})
+                        </label>
+                    </div>
+                `).join('');
+                
+                productElement.innerHTML = `
+                    <div class="product-image">
+                        <img src="${product.image}"  alt="${product.name}" >
+                        ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ''}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">${product.name}</h3>
+                        <p class="product-description">${product.description || 'Delicious ramen prepared with premium ingredients.'}</p>
+                        <div class="product-meta">
+                            <div class="product-price">RM ${product.price.toFixed(2)}</div>
+                            <div class="product-availability">Available: ${product.quantity}</div>
+                        </div>
+                        <div class="order-options">
+                            <div class="quantity-selector">
+                                <label>Qty:</label>
+                                <div class="quantity-controls">
+                                    <button class="quantity-btn" onclick="decreaseQuantity('${product.id}')">-</button>
+                                    <input type="number" class="quantity-input" id="${product.id}-qty" value="1" min="1" max="${product.quantity}">
+                                    <button class="quantity-btn" onclick="increaseQuantity('${product.id}')">+</button>
+                                </div>
+                            </div>
+                            <div class="addon-selector">
+                                <label>Preparation Options:</label>
+                                ${optionsHtml}
+                            </div>
+                            <button class="order-button" onclick="addToCart('${product.id}')" 
+                                ${product.quantity <= 0 ? 'disabled' : ''}>
+                                ${product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                productContainer.appendChild(productElement);
+            });
+        }
+        
+        // Toggle cart preview
+        function toggleCart() {
+            const cartPreview = document.getElementById('cartPreview');
+            cartPreview.classList.toggle('active');
+        }
+        
+        // Update cart display
+        function updateCartDisplay() {
+            const cartItems = document.getElementById('cartItems');
+            const cartCount = document.querySelector('.cart-count');
+            const cartTotalElement = document.getElementById('cartTotal');
+            
+            cartItems.innerHTML = '';
+            cartCount.textContent = cart.length;
+            
+            cartTotal = 0;
+            cart.forEach((item, index) => {
+                const product = inventoryData[item.productId];
+                if (!product) return;
+                
+                let itemPrice = product.price;
+                if (item.preparationOption === 'masak') itemPrice += 1;
+                if (item.preparationOption === 'masak-telur') itemPrice += 2;
+                
+                const itemTotalPrice = itemPrice * item.quantity;
+                cartTotal += itemTotalPrice;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                    <div class="cart-item-info">
+                        <div class="cart-item-title">${product.name}</div>
+                        <div class="cart-item-details">
+                            ${item.quantity}x | ${item.preparationOption} | RM ${itemPrice.toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="cart-item-remove" onclick="removeFromCart(${index})">×</div>
+                `;
+                cartItems.appendChild(cartItem);
+            });
+            
+            cartTotalElement.textContent = `RM ${cartTotal.toFixed(2)}`;
+        }
+        
+        // Add item to cart
+        function addToCart(productId) {
+            const product = inventoryData[productId];
+            if (!product) {
+                alert('Product not found');
+                return;
+            }
+            
+            const quantityInput = document.getElementById(`${productId}-qty`);
+            const quantity = parseInt(quantityInput.value);
+            
+            if (quantity > product.quantity) {
+                alert(`Sorry, only ${product.quantity} items available in stock.`);
+                return;
+            }
+            
+            const preparationOption = document.querySelector(`input[name="addon-${productId}"]:checked`).value;
+            
+            cart.push({
+                productId,
+                quantity,
+                preparationOption
+            });
+            
+            updateCartDisplay();
+            toggleCart();
+        }
+        
+        // Remove item from cart
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
+        
+        // Open order modal
+        function openOrderModal() {
+            if (cart.length === 0) {
+                alert('Please add items to your cart first!');
+                return;
+            }
+            
+            const modal = document.getElementById('orderModal');
+            const summaryProduct = document.getElementById('summary-product');
+            const summaryQuantity = document.getElementById('summary-quantity');
+            const summaryAddons = document.getElementById('summary-addons');
+            const summaryTotal = document.getElementById('summary-total');
+            
+            let itemsList = '';
+            cart.forEach(item => {
+                const product = inventoryData[item.productId];
+                if (!product) return;
+                
+                itemsList += `${product.name} (${item.quantity}x) - ${item.preparationOption}<br>`;
+            });
+            
+            summaryProduct.innerHTML = itemsList;
+            summaryQuantity.textContent = cart.length + ' items';
+            summaryAddons.textContent = cart.map(item => item.preparationOption).join(', ');
+            summaryTotal.textContent = `RM ${cartTotal.toFixed(2)}`;
+            
+            modal.style.display = 'block';
+            
+            // Hide cart preview when opening modal
+            const cartPreview = document.getElementById('cartPreview');
+            cartPreview.classList.remove('active');
+        }
+        
+        // Close order modal
+        function closeOrderModal() {
+            const modal = document.getElementById('orderModal');
+            modal.style.display = 'none';
+        }
+        
+        // Function to prepare WhatsApp message with order details
+        function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderItems) {
+            // Current date and time
+            const now = new Date();
+            const date = now.toLocaleDateString();
+            const time = now.toLocaleTimeString();
+            
+            // Calculate order total
+            let orderTotal = 0;
+            orderItems.forEach(item => {
+                orderTotal += item.totalPrice;
+            });
+            
+            // Construct message
+            let message = `🍜 *NEW ORDER FROM RAMEN SIBOX* 🍜\n\n`;
+            message += `*Date:* ${date}\n`;
+            message += `*Time:* ${time}\n\n`;
+            message += `*Customer Name:* ${customerName}\n`;
+            
+            if (roomNumber) {
+                message += `*Room Number:* ${roomNumber}\n`;
+            }
+            
+            message += `*Payment Method:* ${paymentType}\n`;
+            message += `*Order Type:* ${orderType}\n\n`;
+            message += `*ORDER DETAILS:*\n`;
+            
+            // Add each item to the message
+            orderItems.forEach((item, index) => {
+                message += `${index + 1}. ${item.productName} (${item.quantity}x) - ${item.preparationOption}\n`;
+                message += `   RM ${item.totalPrice.toFixed(2)}\n`;
+            });
+            
+            message += `\n*TOTAL: RM ${orderTotal.toFixed(2)}*\n\n`;
+            message += `Thank you for your order! 🙏`;
+            
+            return encodeURIComponent(message);
+        }
+
+        // Function to open WhatsApp with the prepared message
+        function openWhatsApp(message) {
+            // Your actual WhatsApp number with country code
+            const whatsappNumber = "601169591087";
+            
+            // Create WhatsApp URL
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${message}`;
+            
+            // Open WhatsApp in a new window
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        // Submit order to Firestore with WhatsApp integration
+        async function submitOrder() {
+            const customerName = document.getElementById('customer-name').value;
+            const roomNumber = document.getElementById('room-number').value;
+            const paymentType = document.getElementById('payment-type').value;
+            const orderType = document.getElementById('order-type').value;
+            const orderSpinner = document.getElementById('orderSpinner');
+            const submitButton = document.getElementById('submitOrderButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            if (!customerName) {
+                alert("Please enter your name");
+                return;
+            }
+            
+            if (cart.length === 0) {
+                alert("Your cart is empty");
+                return;
+            }
+            
+            try {
+                orderSpinner.style.display = "block";
+                submitButton.disabled = true;
+                loadingOverlay.style.display = "flex";
+                
+                // Check stock availability one more time
+                for (const item of cart) {
+                    const product = inventoryData[item.productId];
+                    if (!product) {
+                        throw new Error(`Product not found: ${item.productId}`);
+                    }
+                    
+                    if (product.quantity < item.quantity) {
+                        throw new Error(`Sorry, only ${product.quantity} ${product.name} available in stock.`);
+                    }
+                }
+                
+                // Create order documents in Firestore (one for each cart item)
+                const orderPromises = cart.map(async (item) => {
+                    const product = inventoryData[item.productId];
+                    
+                    // Calculate price with add-ons
+                    let itemPrice = product.price;
+                    if (item.preparationOption === 'masak') itemPrice += 1;
+                    if (item.preparationOption === 'masak-telur') itemPrice += 2;
+                    
+                    const orderData = {
+                        customer_name: customerName,
+                        room_number: roomNumber || "",
+                        product_id: item.productId,
+                        product_name: product.name,
+                        quantity: item.quantity,
+                        preparation_option: item.preparationOption,
+                        unit_price: product.price,
+                        total_price: itemPrice * item.quantity,
+                        payment_type: paymentType,
+                        order_type: orderType,
+                        order_date: firebase.firestore.FieldValue.serverTimestamp(),
+                        status: "Pending"
+                    };
+                    
+                    // Add to Orders collection
+                    const orderRef = await db.collection("Orders").add(orderData);
+                    console.log("Order created with ID:", orderRef.id);
+                    
+                    // Update inventory quantity
+                    const productRef = db.collection("Inventory").doc(item.productId);
+                    await productRef.update({
+                        quantity: firebase.firestore.FieldValue.increment(-item.quantity)
+                    });
+                    
+                    // Update local inventory data
+                    inventoryData[item.productId].quantity -= item.quantity;
+                    
+                    return {
+                        orderId: orderRef.id,
+                        productId: item.productId,
+                        productName: product.name,
+                        quantity: item.quantity,
+                        preparationOption: item.preparationOption,
+                        totalPrice: itemPrice * item.quantity
+                    };
+                });
+                
+                // Wait for all orders to be created
+                const orderResults = await Promise.all(orderPromises);
+                
+                // Prepare WhatsApp message
+                const whatsappMessage = prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderResults);
+                
+                // Reset UI after successful order
+                alert(`Thank you for your order, ${customerName}!\nYour order will be prepared soon.\nYou will now be redirected to WhatsApp to confirm your order.`);
+                
+                // Open WhatsApp with prepared message
+                openWhatsApp(whatsappMessage);
+                
+                // Clear cart and reset UI
+                cart = [];
+                updateCartDisplay();
+                closeOrderModal();
+                document.getElementById('orderForm').reset();
+                
+                // Refresh products to show updated quantities
+                renderProducts();
+                
+            } catch (error) {
+                console.error("Error submitting order:", error);
+                alert(`Error submitting order: ${error.message}`);
+            } finally {
+                orderSpinner.style.display = "none";
+                submitButton.disabled = false;
+                loadingOverlay.style.display = "none";
+            }
+        }
+        
+        // Quantity controls
+        function increaseQuantity(productId) {
+            const input = document.getElementById(`${productId}-qty`);
+            const currentValue = parseInt(input.value);
+            const product = inventoryData[productId];
+            
+            if (currentValue < product.quantity) {
+                input.value = currentValue + 1;
+            }
+        }
+        
+        function decreaseQuantity(productId) {
+            const input = document.getElementById(`${productId}-qty`);
+            const currentValue = parseInt(input.value);
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+            }
+        }
+        
+        // Close modals when clicking outside of them
+        window.onclick = function(event) {
+            const orderModal = document.getElementById('orderModal');
+            
+            if (event.target === orderModal) {
+                closeOrderModal();
+            }
+        };
+        
+        // Initialize the cart
+        updateCartDisplay();
+    </script>
+</body>
+</html>

@@ -7,6 +7,9 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- SweetAlert2 CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* Custom Font */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -34,6 +37,11 @@
         body {
             background-color: var(--light-gray);
             color: var(--black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            /* Remove the padding-bottom that was causing the issue */
         }
         
          /* Header */
@@ -98,6 +106,7 @@
         
         /* Main Content */
         .container {
+            flex: 1;
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
@@ -142,6 +151,8 @@
             width: 340px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            padding-bottom: 60px;  /* Make space for the fixed button */
         }
         
         .product-card:hover {
@@ -306,6 +317,107 @@
             cursor: not-allowed;
         }
         
+        /* Static Add to Cart Button */
+        .static-cart-button {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: auto;
+            min-width: 120px;
+            padding: 0.8rem 1.2rem;
+            background-color: var(--dark-red);
+            color: var(--gold);
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        
+        .static-cart-button:hover {
+            background-color: var(--bright-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .static-cart-button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Fixed Cart Styles */
+        .fixed-cart-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .fixed-cart-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--dark-red);
+            color: var(--gold);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.3s, background-color 0.3s;
+            font-size: 1.8rem;
+        }
+        
+        .fixed-cart-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--bright-red);
+        }
+        
+        .fixed-cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--bright-red);
+            color: var(--white);
+            font-size: 0.8rem;
+            font-weight: bold;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .fixed-cart-preview {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 320px;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 1rem;
+            display: none;
+            animation: slideUp 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes slideUp {
+            from {transform: translateY(20px); opacity: 0;}
+            to {transform: translateY(0); opacity: 1;}
+        }
+        
+        .fixed-cart-preview.active {
+            display: block;
+        }
+        
         /* Order Form Modal */
         .modal {
             display: none;
@@ -424,6 +536,7 @@
             color: var(--cream);
             padding: 1rem;
             text-align: center;
+            margin-top: auto; /* Push footer to the bottom */
         }
         
         .copyright {
@@ -431,46 +544,7 @@
             font-size: 0.9rem;
         }
         
-        /* Cart Styles */
-        .cart-container {
-            position: relative;
-        }
-
-        .cart-icon {
-            color: var(--cream);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .cart-count {
-            background-color: var(--bright-red);
-            color: var(--white);
-            font-size: 0.8rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 50%;
-        }
-
-        .cart-preview {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            width: 300px;
-            background-color: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            padding: 1rem;
-            display: none;
-            z-index: 1000;
-        }
-
-        .cart-preview.active {
-            display: block;
-        }
-
+        /* Cart Items (same for both fixed and original cart) */
         .cart-items {
             max-height: 300px;
             overflow-y: auto;
@@ -569,6 +643,23 @@
             text-align: center;
         }
 
+        /* SweetAlert2 Custom Styles */
+        .swal2-popup {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .swal2-title {
+            color: var(--dark-red);
+        }
+        
+        .swal2-confirm {
+            background-color: var(--dark-red) !important;
+        }
+        
+        .swal2-confirm:focus {
+            box-shadow: 0 0 0 3px rgba(107, 13, 13, 0.5) !important;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .logo-text {
@@ -589,6 +680,11 @@
                 margin: 20% auto;
                 width: 95%;
             }
+            
+            .fixed-cart-preview {
+                width: 280px;
+                max-height: 70vh;
+            }
         }
     </style>
 </head>
@@ -605,19 +701,6 @@
                 <div class="logo-subtitle">Premium Ramen Est. 2024</div>
             </div>
         </div>
-        <div class="cart-container">
-            <div class="cart-icon" onclick="toggleCart()">
-                🛒 <span class="cart-count">0</span>
-            </div>
-            <div class="cart-preview" id="cartPreview">
-                <div class="cart-items" id="cartItems"></div>
-                <div class="cart-total">
-                    <span>Total:</span>
-                    <span id="cartTotal">RM 0</span>
-                </div>
-                <button class="checkout-button" onclick="openOrderModal()">Checkout</button>
-            </div>
-        </div>
     </header>
     
     <div class="container">
@@ -628,6 +711,22 @@
         <div class="products" id="productContainer">
             <!-- Products will be loaded from Firebase -->
             <div class="spinner" id="productsSpinner" style="display: block;"></div>
+        </div>
+    </div>
+    
+    <!-- Fixed Cart at Bottom Right -->
+    <div class="fixed-cart-container">
+        <div class="fixed-cart-icon" onclick="toggleCart()">
+            🛒
+            <span class="fixed-cart-count">0</span>
+        </div>
+        <div class="fixed-cart-preview" id="cartPreview">
+            <div class="cart-items" id="cartItems"></div>
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">RM 0</span>
+            </div>
+            <button class="checkout-button" onclick="openOrderModal()">Checkout</button>
         </div>
     </div>
     
@@ -823,12 +922,13 @@
                                 <label>Preparation Options:</label>
                                 ${optionsHtml}
                             </div>
-                            <button class="order-button" onclick="addToCart('${product.id}')" 
-                                ${product.quantity <= 0 ? 'disabled' : ''}>
-                                ${product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
-                            </button>
                         </div>
                     </div>
+                    <!-- Static Add to Cart Button at bottom right -->
+                    <button class="static-cart-button" onclick="addToCart('${product.id}')" 
+                        ${product.quantity <= 0 ? 'disabled' : ''}>
+                        ${product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
                 `;
                 
                 productContainer.appendChild(productElement);
@@ -844,7 +944,7 @@
         // Update cart display
         function updateCartDisplay() {
             const cartItems = document.getElementById('cartItems');
-            const cartCount = document.querySelector('.cart-count');
+            const cartCount = document.querySelector('.fixed-cart-count');
             const cartTotalElement = document.getElementById('cartTotal');
             
             cartItems.innerHTML = '';
@@ -883,7 +983,12 @@
         function addToCart(productId) {
             const product = inventoryData[productId];
             if (!product) {
-                alert('Product not found');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Product not found',
+                    confirmButtonColor: '#6B0D0D'
+                });
                 return;
             }
             
@@ -891,7 +996,12 @@
             const quantity = parseInt(quantityInput.value);
             
             if (quantity > product.quantity) {
-                alert(`Sorry, only ${product.quantity} items available in stock.`);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Limited Stock',
+                    text: `Sorry, only ${product.quantity} items available in stock.`,
+                    confirmButtonColor: '#6B0D0D'
+                });
                 return;
             }
             
@@ -903,20 +1013,72 @@
                 preparationOption
             });
             
+            // Show success toast notification
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            
+            Toast.fire({
+                icon: 'success',
+                title: `${product.name} added to cart!`
+            });
+            
             updateCartDisplay();
             toggleCart();
         }
         
         // Remove item from cart
         function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCartDisplay();
+            const item = cart[index];
+            const product = inventoryData[item.productId];
+            
+            Swal.fire({
+                title: 'Remove Item?',
+                text: `Remove ${product.name} from your cart?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#6B0D0D',
+                cancelButtonColor: '#888',
+                confirmButtonText: 'Yes, remove it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    cart.splice(index, 1);
+                    updateCartDisplay();
+                    
+                    // Show success toast notification
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Item removed from cart'
+                    });
+                }
+            });
         }
         
         // Open order modal
         function openOrderModal() {
             if (cart.length === 0) {
-                alert('Please add items to your cart first!');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Empty Cart',
+                    text: 'Please add items to your cart first!',
+                    confirmButtonColor: '#6B0D0D'
+                });
                 return;
             }
             
@@ -945,209 +1107,261 @@
             const cartPreview = document.getElementById('cartPreview');
             cartPreview.classList.remove('active');
         }
+
+        
         
         // Close order modal
         function closeOrderModal() {
             const modal = document.getElementById('orderModal');
             modal.style.display = 'none';
         }
-        
-        // Function to prepare WhatsApp message with order details
-        function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderItems) {
-            // Current date and time
-            const now = new Date();
-            const date = now.toLocaleDateString();
-            const time = now.toLocaleTimeString();
-            
-            // Calculate order total
-            let orderTotal = 0;
-            orderItems.forEach(item => {
-                orderTotal += item.totalPrice;
-            });
-            
-            // Construct message
-            let message = `🍜 *NEW ORDER FROM RAMEN SIBOX* 🍜\n\n`;
-            message += `*Date:* ${date}\n`;
-            message += `*Time:* ${time}\n\n`;
-            message += `*Customer Name:* ${customerName}\n`;
-            
-            if (roomNumber) {
-                message += `*Room Number:* ${roomNumber}\n`;
-            }
-            
-            message += `*Payment Method:* ${paymentType}\n`;
-            message += `*Order Type:* ${orderType}\n\n`;
-            message += `*ORDER DETAILS:*\n`;
-            
-            // Add each item to the message
-            orderItems.forEach((item, index) => {
-                message += `${index + 1}. ${item.productName} (${item.quantity}x) - ${item.preparationOption}\n`;
-                message += `   RM ${item.totalPrice.toFixed(2)}\n`;
-            });
-            
-            message += `\n*TOTAL: RM ${orderTotal.toFixed(2)}*\n\n`;
-            message += `Thank you for your order! 🙏`;
-            
-            return encodeURIComponent(message);
-        }
 
-        // Function to open WhatsApp with the prepared message
-        function openWhatsApp(message) {
-            // Your actual WhatsApp number with country code
-            const whatsappNumber = "601169591087";
-            
-            // Create WhatsApp URL
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${message}`;
-            
-            // Open WhatsApp in a new window
-            window.open(whatsappUrl, '_blank');
-        }
+        // Add this function to your JavaScript code, just after the closeOrderModal function
+
+// Submit order to Firestore with WhatsApp integration
+async function submitOrder() {
+    console.log("submitOrder function called"); // For debugging
+    
+    const customerName = document.getElementById('customer-name').value;
+    const roomNumber = document.getElementById('room-number').value;
+    const paymentType = document.getElementById('payment-type').value;
+    const orderType = document.getElementById('order-type').value;
+    const orderSpinner = document.getElementById('orderSpinner');
+    const submitButton = document.getElementById('submitOrderButton');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    if (!customerName) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please enter your name',
+            confirmButtonColor: '#6B0D0D'
+        });
+        return;
+    }
+    
+    if (cart.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Empty Cart',
+            text: 'Your cart is empty',
+            confirmButtonColor: '#6B0D0D'
+        });
+        return;
+    }
+    
+    try {
+        orderSpinner.style.display = "block";
+        submitButton.disabled = true;
+        loadingOverlay.style.display = "flex";
         
-        // Submit order to Firestore with WhatsApp integration
-        async function submitOrder() {
-            const customerName = document.getElementById('customer-name').value;
-            const roomNumber = document.getElementById('room-number').value;
-            const paymentType = document.getElementById('payment-type').value;
-            const orderType = document.getElementById('order-type').value;
-            const orderSpinner = document.getElementById('orderSpinner');
-            const submitButton = document.getElementById('submitOrderButton');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            
-            if (!customerName) {
-                alert("Please enter your name");
-                return;
+        // Check stock availability one more time
+        for (const item of cart) {
+            const product = inventoryData[item.productId];
+            if (!product) {
+                throw new Error(`Product not found: ${item.productId}`);
             }
             
-            if (cart.length === 0) {
-                alert("Your cart is empty");
-                return;
-            }
-            
-            try {
-                orderSpinner.style.display = "block";
-                submitButton.disabled = true;
-                loadingOverlay.style.display = "flex";
-                
-                // Check stock availability one more time
-                for (const item of cart) {
-                    const product = inventoryData[item.productId];
-                    if (!product) {
-                        throw new Error(`Product not found: ${item.productId}`);
-                    }
-                    
-                    if (product.quantity < item.quantity) {
-                        throw new Error(`Sorry, only ${product.quantity} ${product.name} available in stock.`);
-                    }
-                }
-                
-                // Create order documents in Firestore (one for each cart item)
-                const orderPromises = cart.map(async (item) => {
-                    const product = inventoryData[item.productId];
-                    
-                    // Calculate price with add-ons
-                    let itemPrice = product.price;
-                    if (item.preparationOption === 'masak') itemPrice += 1;
-                    if (item.preparationOption === 'masak-telur') itemPrice += 2;
-                    
-                    const orderData = {
-                        customer_name: customerName,
-                        room_number: roomNumber || "",
-                        product_id: item.productId,
-                        product_name: product.name,
-                        quantity: item.quantity,
-                        preparation_option: item.preparationOption,
-                        unit_price: product.price,
-                        total_price: itemPrice * item.quantity,
-                        payment_type: paymentType,
-                        order_type: orderType,
-                        order_date: firebase.firestore.FieldValue.serverTimestamp(),
-                        status: "Pending"
-                    };
-                    
-                    // Add to Orders collection
-                    const orderRef = await db.collection("Orders").add(orderData);
-                    console.log("Order created with ID:", orderRef.id);
-                    
-                    // Update inventory quantity
-                    const productRef = db.collection("Inventory").doc(item.productId);
-                    await productRef.update({
-                        quantity: firebase.firestore.FieldValue.increment(-item.quantity)
-                    });
-                    
-                    // Update local inventory data
-                    inventoryData[item.productId].quantity -= item.quantity;
-                    
-                    return {
-                        orderId: orderRef.id,
-                        productId: item.productId,
-                        productName: product.name,
-                        quantity: item.quantity,
-                        preparationOption: item.preparationOption,
-                        totalPrice: itemPrice * item.quantity
-                    };
-                });
-                
-                // Wait for all orders to be created
-                const orderResults = await Promise.all(orderPromises);
-                
-                // Prepare WhatsApp message
-                const whatsappMessage = prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderResults);
-                
-                // Reset UI after successful order
-                alert(`Thank you for your order, ${customerName}!\nYour order will be prepared soon.\nYou will now be redirected to WhatsApp to confirm your order.`);
-                
-                // Open WhatsApp with prepared message
-                openWhatsApp(whatsappMessage);
-                
-                // Clear cart and reset UI
-                cart = [];
-                updateCartDisplay();
-                closeOrderModal();
-                document.getElementById('orderForm').reset();
-                
-                // Refresh products to show updated quantities
-                renderProducts();
-                
-            } catch (error) {
-                console.error("Error submitting order:", error);
-                alert(`Error submitting order: ${error.message}`);
-            } finally {
-                orderSpinner.style.display = "none";
-                submitButton.disabled = false;
-                loadingOverlay.style.display = "none";
+            if (product.quantity < item.quantity) {
+                throw new Error(`Sorry, only ${product.quantity} ${product.name} available in stock.`);
             }
         }
         
-        // Quantity controls
-        function increaseQuantity(productId) {
-            const input = document.getElementById(`${productId}-qty`);
-            const currentValue = parseInt(input.value);
-            const product = inventoryData[productId];
+        // Create order documents in Firestore (one for each cart item)
+        const orderPromises = cart.map(async (item) => {
+            const product = inventoryData[item.productId];
             
-            if (currentValue < product.quantity) {
-                input.value = currentValue + 1;
-            }
-        }
-        
-        function decreaseQuantity(productId) {
-            const input = document.getElementById(`${productId}-qty`);
-            const currentValue = parseInt(input.value);
-            if (currentValue > 1) {
-                input.value = currentValue - 1;
-            }
-        }
-        
-        // Close modals when clicking outside of them
-        window.onclick = function(event) {
-            const orderModal = document.getElementById('orderModal');
+            // Calculate price with add-ons
+            let itemPrice = product.price;
+            if (item.preparationOption === 'masak') itemPrice += 1;
+            if (item.preparationOption === 'masak-telur') itemPrice += 2;
             
-            if (event.target === orderModal) {
-                closeOrderModal();
-            }
-        };
+            const orderData = {
+                customer_name: customerName,
+                room_number: roomNumber || "",
+                product_id: item.productId,
+                product_name: product.name,
+                quantity: item.quantity,
+                preparation_option: item.preparationOption,
+                unit_price: product.price,
+                total_price: itemPrice * item.quantity,
+                payment_type: paymentType,
+                order_type: orderType,
+                order_date: firebase.firestore.FieldValue.serverTimestamp(),
+                status: "Pending"
+            };
+            
+            // Add to Orders collection
+            const orderRef = await db.collection("Orders").add(orderData);
+            console.log("Order created with ID:", orderRef.id);
+            
+            // Update inventory quantity
+            const productRef = db.collection("Inventory").doc(item.productId);
+            await productRef.update({
+                quantity: firebase.firestore.FieldValue.increment(-item.quantity)
+            });
+            
+            // Update local inventory data
+            inventoryData[item.productId].quantity -= item.quantity;
+            
+            return {
+                orderId: orderRef.id,
+                productId: item.productId,
+                productName: product.name,
+                quantity: item.quantity,
+                preparationOption: item.preparationOption,
+                totalPrice: itemPrice * item.quantity
+            };
+        });
         
-        // Initialize the cart
-        updateCartDisplay();
+        // Wait for all orders to be created
+        const orderResults = await Promise.all(orderPromises);
+        
+        // Prepare WhatsApp message
+        const whatsappMessage = prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderResults);
+        
+        // Close modal and hide loading overlay
+        closeOrderModal();
+        loadingOverlay.style.display = "none";
+        
+        // Reset UI and show success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Order Placed Successfully!',
+            html: `Thank you for your order, <strong>${customerName}</strong>!<br>Your order will be prepared soon.<br>You will now be redirected to WhatsApp to confirm your order.`,
+            confirmButtonColor: '#6B0D0D',
+            timer: 5000,
+            timerProgressBar: true
+        }).then(() => {
+            // Open WhatsApp with prepared message
+            openWhatsApp(whatsappMessage);
+            
+            // Clear cart and reset UI
+            cart = [];
+            updateCartDisplay();
+            document.getElementById('orderForm').reset();
+            
+            // Refresh products to show updated quantities
+            renderProducts();
+        });
+        
+    } catch (error) {
+        console.error("Error submitting order:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Order Failed',
+            text: `Error submitting order: ${error.message}`,
+            confirmButtonColor: '#6B0D0D'
+        });
+    } finally {
+        orderSpinner.style.display = "none";
+        submitButton.disabled = false;
+        loadingOverlay.style.display = "none";
+    }
+}
+
+// Function to prepare WhatsApp message with order details
+function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderItems) {
+    // Current date and time
+    const now = new Date();
+    const date = now.toLocaleDateString();
+    const time = now.toLocaleTimeString();
+    
+    // Calculate order total
+    let orderTotal = 0;
+    orderItems.forEach(item => {
+        orderTotal += item.totalPrice;
+    });
+    
+    // Construct message
+    let message = `🍜 *NEW ORDER FROM RAMEN SIBOX* 🍜\n\n`;
+    message += `*Date:* ${date}\n`;
+    message += `*Time:* ${time}\n\n`;
+    message += `*Customer Name:* ${customerName}\n`;
+    
+    if (roomNumber) {
+        message += `*Room Number:* ${roomNumber}\n`;
+    }
+    
+    message += `*Payment Method:* ${paymentType}\n`;
+    message += `*Order Type:* ${orderType}\n\n`;
+    message += `*ORDER DETAILS:*\n`;
+    
+    // Add each item to the message
+    orderItems.forEach((item, index) => {
+        message += `${index + 1}. ${item.productName} (${item.quantity}x) - ${item.preparationOption}\n`;
+        message += `   RM ${item.totalPrice.toFixed(2)}\n`;
+    });
+    
+    message += `\n*TOTAL: RM ${orderTotal.toFixed(2)}*\n\n`;
+    message += `Thank you for your order! 🙏`;
+    
+    return encodeURIComponent(message);
+}
+
+// Replace your current openWhatsApp function with this improved version
+function openWhatsApp(message) {
+    // Your actual WhatsApp number with country code
+    const whatsappNumber = "601169591087";
+    
+    // Check if the device is iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    let whatsappUrl;
+    
+    if (isIOS) {
+        // Special handling for iOS devices
+        // First try the WhatsApp app URL scheme
+        whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${message}`;
+        
+        // Create a fallback in case the app isn't installed
+        setTimeout(() => {
+            // If still on the same page after a short delay, try the web version
+            window.location.href = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${message}`;
+        }, 500);
+    } else {
+        // For other devices, use the standard web URL
+        whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${message}`;
+    }
+    
+    // Try to open the appropriate URL
+    window.open(whatsappUrl, '_blank');
+    
+    // Show a helpful message to the user
+    Swal.fire({
+        icon: 'info',
+        title: 'Opening WhatsApp',
+        text: 'If WhatsApp doesn\'t open automatically, please check if it\'s installed or click OK to try again.',
+        confirmButtonColor: '#6B0D0D',
+        showCancelButton: true,
+        cancelButtonText: 'Copy Text Instead',
+        confirmButtonText: 'Try Again'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Try again if the user clicks "Try Again"
+            window.location.href = whatsappUrl;
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // If user chooses "Copy Text Instead", decode the message and let them copy it
+            const decodedMessage = decodeURIComponent(message);
+            
+            // Create a textarea element to help with copying
+            const textArea = document.createElement('textarea');
+            textArea.value = decodedMessage;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Confirm copy to user
+            Swal.fire({
+                icon: 'success',
+                title: 'Message Copied!',
+                text: 'Order details copied to clipboard. You can now paste it in WhatsApp.',
+                confirmButtonColor: '#6B0D0D'
+            });
+        }
+    });
+}
     </script>
 </body>
 </html>

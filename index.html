@@ -934,6 +934,40 @@
                 productContainer.appendChild(productElement);
             });
         }
+
+        function increaseQuantity(productId) {
+            const quantityInput = document.getElementById(`${productId}-qty`);
+            const currentQuantity = parseInt(quantityInput.value);
+            const product = inventoryData[productId];
+            
+            if (product && currentQuantity < product.quantity) {
+                quantityInput.value = currentQuantity + 1;
+            } else {
+                // Show a message when reaching maximum stock
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                
+                Toast.fire({
+                    icon: 'warning',
+                    title: `Max stock reached (${product.quantity} items)`
+                });
+            }
+        }
+
+        // Function to decrease the quantity of a product
+        function decreaseQuantity(productId) {
+            const quantityInput = document.getElementById(`${productId}-qty`);
+            const currentQuantity = parseInt(quantityInput.value);
+            
+            if (currentQuantity > 1) {
+                quantityInput.value = currentQuantity - 1;
+            }
+        }
         
         // Toggle cart preview
         function toggleCart() {

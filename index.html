@@ -511,23 +511,32 @@
         }
         
         .order-summary {
-            background-color: var(--light-gray);
-            padding: 1rem;
-            border-radius: 5px;
+            background-color: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
             margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .summary-item {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+            padding: 0.5rem;
+            background-color: var(--light-gray);
+            border-radius: 5px;
         }
         
         .summary-total {
             font-weight: 700;
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-            border-top: 2px dashed #ddd;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 2px solid var(--dark-red);
+            color: var(--dark-red);
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         /* Footer */
@@ -685,6 +694,162 @@
                 width: 280px;
                 max-height: 70vh;
             }
+
+            /* Preparation Options Styles */
+            .preparation-selector {
+                margin-bottom: 1rem;
+            }
+
+            .preparation-options {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                margin-top: 0.5rem;
+            }
+
+            .radio-option {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .radio-option input[type="radio"] {
+                margin: 0;
+                cursor: pointer;
+            }
+
+            .radio-option label {
+                cursor: pointer;
+                padding: 0.5rem;
+                border-radius: 5px;
+                transition: color 0.3s;
+            }
+
+            .radio-option input[type="radio"]:checked + label {
+                color: var(--dark-red);
+                font-weight: 500;
+            }
+
+            /* Add-ons Styles */
+            .addon-options {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+            }
+
+            .addon-options label {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.3rem;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+
+            .addon-options label:hover {
+                background-color: rgba(107, 13, 13, 0.05);
+            }
+
+            .addon-checkbox {
+                width: 16px;
+                height: 16px;
+                accent-color: var(--dark-red);
+            }
+
+            .order-item:last-child {
+                border-bottom: none;
+            }
+
+            .item-details {
+                display: flex;
+                flex-direction: column;
+                gap: 0.3rem;
+                font-size: 0.9rem;
+                color: #666;
+                margin: 0.5rem 0;
+            }
+
+            .item-price {
+                font-weight: 600;
+                color: var(--orange);
+            }
+
+            .summary-item span:first-child {
+                font-weight: 500;
+                color: var(--dark-red);
+            }
+
+            .summary-item span:nth-child(2) {
+                color: #666;
+                text-align: right;
+                max-width: 60%;
+                flex-wrap: wrap;
+            }
+
+            /* Order Summary Styles */
+.order-summary-header {
+    border-bottom: 2px solid var(--dark-red);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.order-details {
+            margin-bottom: 2rem;
+        }
+
+        .order-details-title {
+            font-size: 1.1rem;
+            color: var(--dark-red);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--cream);
+        }
+
+        .order-item {
+            margin-bottom: 1rem;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid var(--orange);
+            border-bottom: 2px solid var(--orange);
+        }
+
+        .order-item + .order-item {
+            border-top: 1px solid #ddd;
+            padding-top: 1.5rem;
+        }
+        border-bottom: none;
+        }
+        
+.main-item {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+    color: var(--dark-red);
+    margin-bottom: 0.5rem;
+}
+
+.addons-container {
+    border-left: 3px solid var(--orange);
+    padding-left: 1rem;
+    margin-left: 0.5rem;
+}
+
+.addon-item {
+    display: flex;
+    justify-content: space-between;
+    color: #666;
+    font-size: 0.9em;
+    margin: 0.3rem 0;
+}
+
+.preparation-type {
+    color: var(--orange);
+    font-size: 0.85em;
+    margin-bottom: 0.5rem;
+}
         }
     </style>
 </head>
@@ -737,18 +902,10 @@
             <h2 class="modal-title">Complete Your Order</h2>
             
             <div class="order-summary">
-                <div class="summary-item">
-                    <span>Product:</span>
-                    <span id="summary-product"></span>
+                <div class="section-title" style="margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.2rem;">Order Summary</h3>
                 </div>
-                <div class="summary-item">
-                    <span>Quantity:</span>
-                    <span id="summary-quantity"></span>
-                </div>
-                <div class="summary-item" id="summary-addons-container">
-                    <span>Preparation:</span>
-                    <span id="summary-addons"></span>
-                </div>
+                <div id="summary-items"></div>
                 <div class="summary-item summary-total">
                     <span>Total:</span>
                     <span id="summary-total"></span>
@@ -769,6 +926,7 @@
                 <div class="form-group">
                     <label for="payment-type">Payment Method</label>
                     <select id="payment-type" class="form-select" required>
+                        <option value="">Select Payment Method</option>
                         <option value="Cash">Cash</option>
                         <option value="Online">Online</option>
                     </select>
@@ -777,6 +935,7 @@
                 <div class="form-group">
                     <label for="order-type">Order Type</label>
                     <select id="order-type" class="form-select" required>
+                        <option value="">Select Order Type</option>
                         <option value="Self Pickup">Self Pickup</option>
                         <option value="Delivery">Delivery</option>
                     </select>
@@ -823,14 +982,16 @@
         let cart = [];
         let cartTotal = 0;
         let inventoryData = {};
+        let addOnsData = {};
         
         // DOM elements
         const productContainer = document.getElementById('productContainer');
         const productsSpinner = document.getElementById('productsSpinner');
         
         // Load inventory data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadInventory();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAddOns();
+            await loadInventory();
         });
         
         // Load inventory data from Firestore
@@ -871,69 +1032,103 @@
                 productsSpinner.style.display = "none";
             }
         }
+
+        async function loadAddOns() {
+            try {
+                const addOnsSnapshot = await db.collection("AddOn").get();
+                addOnsData = {};
+                addOnsSnapshot.forEach(doc => {
+                    addOnsData[doc.id] = {
+                        id: doc.id,
+                        name: doc.data().name,
+                        price: doc.data().value
+                    };
+                });
+            } catch (error) {
+                console.error("Error loading add-ons:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Add-Ons Error',
+                    text: 'Could not load add-ons. Please refresh the page.',
+                    confirmButtonColor: '#6B0D0D'
+                });
+            }
+        }
         
         // Render products from inventory data
         function renderProducts() {
-            productContainer.innerHTML = '';
-            
-            Object.values(inventoryData).forEach(product => {
-                const productElement = document.createElement('div');
-                productElement.className = 'product-card';
-                productElement.setAttribute('data-product-id', product.id);
-                
-                const preparationOptions = [
-                    { id: 'packaging', label: 'Packaging', price: 0 },
-                    { id: 'masak', label: 'Masak', price: 1 },
-                    { id: 'masak-telur', label: 'Masak + Telur', price: 2 }
-                ];
-                
-                const optionsHtml = preparationOptions.map((option, index) => `
-                    <div class="addon-option">
-                        <label>
-                            <input type="radio" id="${option.id}-${product.id}" name="addon-${product.id}" class="addon-radio" 
-                                value="${option.id}" ${index === 0 ? 'checked' : ''}>
-                            ${option.label} (+RM${option.price})
-                        </label>
-                    </div>
-                `).join('');
-                
-                productElement.innerHTML = `
-                    <div class="product-image">
-                        <img src="${product.image}"  alt="${product.name}" >
-                        ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ''}
-                    </div>
-                    <div class="product-info">
-                        <h3 class="product-title">${product.name}</h3>
-                        <p class="product-description">${product.description || 'Delicious ramen prepared with premium ingredients.'}</p>
-                        <div class="product-meta">
-                            <div class="product-price">RM ${product.price.toFixed(2)}</div>
-                            <div class="product-availability">Available: ${product.quantity}</div>
-                        </div>
-                        <div class="order-options">
-                            <div class="quantity-selector">
-                                <label>Qty:</label>
-                                <div class="quantity-controls">
-                                    <button class="quantity-btn" onclick="decreaseQuantity('${product.id}')">-</button>
-                                    <input type="number" class="quantity-input" id="${product.id}-qty" value="1" min="1" max="${product.quantity}">
-                                    <button class="quantity-btn" onclick="increaseQuantity('${product.id}')">+</button>
-                                </div>
-                            </div>
-                            <div class="addon-selector">
-                                <label>Preparation Options:</label>
-                                ${optionsHtml}
-                            </div>
+    productContainer.innerHTML = '';
+    
+    Object.values(inventoryData).forEach(product => {
+        const productElement = document.createElement('div');
+        productElement.className = 'product-card';
+        productElement.setAttribute('data-product-id', product.id);
+        
+        // Generate add-ons HTML from Firestore data
+        const addOnsHtml = Object.values(addOnsData).map(addOn => `
+            <label>
+                <input type="checkbox" 
+                       class="addon-checkbox" 
+                       name="addon-${product.id}" 
+                       value="${addOn.id}">
+                ${addOn.name} (+RM${addOn.price.toFixed(2)})
+            </label>
+        `).join('');
+
+        productElement.innerHTML = `
+            <div class="product-image">
+                <img src="${product.image}" alt="${product.name}">
+                ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ''}
+            </div>
+            <div class="product-info">
+                <h3 class="product-title">${product.name}</h3>
+                <p class="product-description">${product.description || 'Delicious ramen prepared with premium ingredients.'}</p>
+                <div class="product-meta">
+                    <div class="product-price">RM ${product.price.toFixed(2)}</div>
+                    <div class="product-availability">Available: ${product.quantity}</div>
+                </div>
+                <div class="order-options">
+                    <div class="quantity-selector">
+                        <label>Qty:</label>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="decreaseQuantity('${product.id}')">-</button>
+                            <input type="number" class="quantity-input" id="${product.id}-qty" value="1" min="1" max="${product.quantity}">
+                            <button class="quantity-btn" onclick="increaseQuantity('${product.id}')">+</button>
                         </div>
                     </div>
-                    <!-- Static Add to Cart Button at bottom right -->
-                    <button class="static-cart-button" onclick="addToCart('${product.id}')" 
-                        ${product.quantity <= 0 ? 'disabled' : ''}>
-                        ${product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
-                    </button>
-                `;
-                
-                productContainer.appendChild(productElement);
-            });
-        }
+                    <!-- Preparation Options -->
+                    <div class="preparation-selector">
+                        <label>Preparation:</label>
+                        <div class="preparation-options">
+                            <div class="radio-option">
+                                <input type="radio" id="packaging-${product.id}" name="preparation-${product.id}" value="packaging" checked>
+                                <label for="packaging-${product.id}">Packaging (Free)</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="masak-${product.id}" name="preparation-${product.id}" value="masak">
+                                <label for="masak-${product.id}">Masak (+RM1.00)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Dynamic Add-ons Section -->
+                    <div class="addon-selector">
+                        <label>Add-ons:</label>
+                        <div class="addon-options">
+                            ${addOnsHtml}
+                        </div>
+                    </div>
+                </div>
+                <!-- Static Add to Cart Button -->
+                <button class="static-cart-button" onclick="addToCart('${product.id}')" 
+                    ${product.quantity <= 0 ? 'disabled' : ''}>
+                    ${product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+            </div>
+        `;
+        
+        productContainer.appendChild(productElement);
+    });
+}
 
         function increaseQuantity(productId) {
             const quantityInput = document.getElementById(`${productId}-qty`);
@@ -977,41 +1172,64 @@
         
         // Update cart display
         function updateCartDisplay() {
-            const cartItems = document.getElementById('cartItems');
-            const cartCount = document.querySelector('.fixed-cart-count');
-            const cartTotalElement = document.getElementById('cartTotal');
-            
-            cartItems.innerHTML = '';
-            cartCount.textContent = cart.length;
-            
-            cartTotal = 0;
-            cart.forEach((item, index) => {
-                const product = inventoryData[item.productId];
-                if (!product) return;
-                
-                let itemPrice = product.price;
-                if (item.preparationOption === 'masak') itemPrice += 1;
-                if (item.preparationOption === 'masak-telur') itemPrice += 2;
-                
-                const itemTotalPrice = itemPrice * item.quantity;
-                cartTotal += itemTotalPrice;
-                
-                const cartItem = document.createElement('div');
-                cartItem.className = 'cart-item';
-                cartItem.innerHTML = `
-                    <div class="cart-item-info">
-                        <div class="cart-item-title">${product.name}</div>
-                        <div class="cart-item-details">
-                            ${item.quantity}x | ${item.preparationOption} | RM ${itemPrice.toFixed(2)}
-                        </div>
-                    </div>
-                    <div class="cart-item-remove" onclick="removeFromCart(${index})">×</div>
-                `;
-                cartItems.appendChild(cartItem);
-            });
-            
-            cartTotalElement.textContent = `RM ${cartTotal.toFixed(2)}`;
-        }
+    const cartItems = document.getElementById('cartItems');
+    const cartCount = document.querySelector('.fixed-cart-count');
+    const cartTotalElement = document.getElementById('cartTotal');
+    
+    cartItems.innerHTML = '';
+    cartCount.textContent = cart.length;
+    
+    cartTotal = 0;
+    cart.forEach((item, index) => {
+        const product = inventoryData[item.productId];
+        if (!product) return;
+        
+        let itemPrice = product.price;
+        const addOnPrices = {
+            'egg': 1.50,
+            'meat': 2.00,
+            'vegetables': 0.50
+        };
+        
+        // Preparation price
+        if (item.preparationOption === 'masak') itemPrice += 1;
+        
+        // Add-ons prices
+        let addOnsText = '';
+        item.addOns.forEach(addOnId => {
+            const addOn = addOnsData[addOnId];
+            if (addOn) {
+                itemPrice += addOn.price;
+                addOnsText += `${addOn.name} (+RM${addOn.price.toFixed(2)}), `;
+            }
+        });
+        
+        // Clean up add-ons text
+        addOnsText = addOnsText.replace(/, $/, '');
+        if (!addOnsText) addOnsText = 'No add-ons';
+        
+        const itemTotalPrice = itemPrice * item.quantity;
+        cartTotal += itemTotalPrice;
+        
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+            <div class="cart-item-info">
+                <div class="cart-item-title">${product.name}</div>
+                <div class="cart-item-details">
+                    ${item.quantity}x | 
+                    ${item.preparationOption === 'masak' ? 'Cooked' : 'Packaging'} | 
+                    Add-ons: ${addOnsText}
+                </div>
+                <div class="cart-item-price">RM ${itemTotalPrice.toFixed(2)}</div>
+            </div>
+            <div class="cart-item-remove" onclick="removeFromCart(${index})">×</div>
+        `;
+        cartItems.appendChild(cartItem);
+    });
+    
+    cartTotalElement.textContent = `RM ${cartTotal.toFixed(2)}`;
+}
         
         // Add item to cart
         function addToCart(productId) {
@@ -1039,12 +1257,16 @@
                 return;
             }
             
-            const preparationOption = document.querySelector(`input[name="addon-${productId}"]:checked`).value;
-            
+            // Get preparation option and add-ons
+            const preparationOption = document.querySelector(`input[name="preparation-${productId}"]:checked`).value;
+            const addOns = Array.from(document.querySelectorAll(`input[name="addon-${productId}"]:checked`))
+                .map(checkbox => checkbox.value);
+
             cart.push({
                 productId,
                 quantity,
-                preparationOption
+                preparationOption,
+                addOns // Add add-ons to cart item
             });
             
             // Show success toast notification
@@ -1106,40 +1328,69 @@
         
         // Open order modal
         function openOrderModal() {
-            if (cart.length === 0) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Empty Cart',
-                    text: 'Please add items to your cart first!',
-                    confirmButtonColor: '#6B0D0D'
-                });
-                return;
-            }
-            
+            if (cart.length === 0) return;
+
             const modal = document.getElementById('orderModal');
-            const summaryProduct = document.getElementById('summary-product');
-            const summaryQuantity = document.getElementById('summary-quantity');
-            const summaryAddons = document.getElementById('summary-addons');
+            const summaryItems = document.getElementById('summary-items');
             const summaryTotal = document.getElementById('summary-total');
-            
-            let itemsList = '';
-            cart.forEach(item => {
-                const product = inventoryData[item.productId];
-                if (!product) return;
-                
-                itemsList += `${product.name} (${item.quantity}x) - ${item.preparationOption}<br>`;
-            });
-            
-            summaryProduct.innerHTML = itemsList;
-            summaryQuantity.textContent = cart.length + ' items';
-            summaryAddons.textContent = cart.map(item => item.preparationOption).join(', ');
-            summaryTotal.textContent = `RM ${cartTotal.toFixed(2)}`;
+
+            const addOnPrices = {
+                'egg': 1.50,
+                'meat': 2.00,
+                'vegetables': 0.50
+            };
+
+            let itemsHtml = '';
+    cart.forEach(item => {
+        const product = inventoryData[item.productId];
+        let itemTotal = product.price * item.quantity;
+        
+        // Preparation price
+        if (item.preparationOption === 'masak') itemTotal += 1 * item.quantity;
+
+        // Add-ons calculation
+        let addOnsHtml = '';
+        item.addOns.forEach(addOnId => {
+            const addOn = addOnsData[addOnId];
+            if (addOn) {
+                itemTotal += addOn.price * item.quantity;
+                addOnsHtml += `
+                    <div class="addon-item">
+                        <span>${addOn.name}</span>
+                        <span>+RM${(addOn.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `;
+            }
+        });
+
+        itemsHtml += `
+            <div class="order-item">
+                <div class="main-item">
+                    <span>${product.name} (${item.quantity}x)</span>
+                    <span>RM${(product.price * item.quantity).toFixed(2)}</span>
+                </div>
+                ${addOnsHtml ? `
+                <div class="addons-container">
+                    <div class="preparation-type">
+                        ${item.preparationOption === 'masak' ? 'Cooked' : 'Packaged'}
+                    </div>
+                    ${addOnsHtml}
+                </div>` : ''}
+            </div>
+        `;
+    });
+
+    // Update modal HTML
+    summaryItems.innerHTML = `
+        <div class="order-summary-header">
+            <h3>Order Details</h3>
+        </div>
+        ${itemsHtml}
+    `;
+    summaryTotal.textContent = `RM ${cartTotal.toFixed(2)}`;
             
             modal.style.display = 'block';
-            
-            // Hide cart preview when opening modal
-            const cartPreview = document.getElementById('cartPreview');
-            cartPreview.classList.remove('active');
+            document.getElementById('cartPreview').classList.remove('active');
         }
 
         
@@ -1164,11 +1415,11 @@ async function submitOrder() {
     const submitButton = document.getElementById('submitOrderButton');
     const loadingOverlay = document.getElementById('loadingOverlay');
     
-    if (!customerName) {
+    if (!customerName || !paymentType || !orderType) {
         Swal.fire({
             icon: 'warning',
             title: 'Missing Information',
-            text: 'Please enter your name',
+            text: 'Please fill in all required fields (Name, Payment Method, and Order Type)',
             confirmButtonColor: '#6B0D0D'
         });
         return;
@@ -1323,8 +1574,20 @@ function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType
     
     // Add each item to the message
     orderItems.forEach((item, index) => {
-        message += `${index + 1}. ${item.productName} (${item.quantity}x) - ${item.preparationOption}\n`;
-        message += `   RM ${item.totalPrice.toFixed(2)}\n`;
+        let addOnsText = '';
+        item.addOns.forEach(addOnId => {
+            const addOn = addOnsData[addOnId];
+            if (addOn) {
+                addOnsText += `${addOn.name} (+RM${addOn.price.toFixed(2)}), `;
+            }
+        });
+        
+        message += `${index + 1}. ${item.productName} (${item.quantity}x)\n`;
+        message += `   Preparation: ${item.preparationOption}\n`;
+        if (addOnsText) {
+            message += `   Add-ons: ${addOnsText.slice(0, -2)}\n`;
+        }
+        message += `   RM ${item.totalPrice.toFixed(2)}\n\n`;
     });
     
     message += `\n*TOTAL: RM ${orderTotal.toFixed(2)}*\n\n`;

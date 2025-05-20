@@ -738,6 +738,22 @@
                 margin-top: 0.5rem;
             }
 
+            .addon-quantity-controls {
+                display: none;
+                align-items: center;
+                gap: 0.5rem;
+                margin-left: 1.5rem;
+                width: 15px;
+            }
+
+            .addon-qty-input {
+                width: 15px;
+                text-align: center;
+                padding: 0.2rem;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+
             .addon-options label {
                 display: flex;
                 align-items: center;
@@ -990,18 +1006,30 @@
         
         // Load inventory data on page load
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadAddOns();
-            await loadInventory();
+            try {
+                await Promise.all([loadAddOns(), loadInventory()]);
+            } catch (error) {
+                console.error("Initialization error:", error);
+                productsSpinner.style.display = "none";
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Loading Error',
+                    text: 'Failed to initialize data. Please refresh the page.',
+                    confirmButtonColor: '#6B0D0D'
+                });
+            }
         });
         
         // Load inventory data from Firestore
         async function loadInventory() {
             try {
                 productsSpinner.style.display = "block";
-                productContainer.innerHTML = '';
-                
-                // Use the compat version syntax
                 const inventorySnapshot = await db.collection("Inventory").get();
+                
+                if (inventorySnapshot.empty) {
+                    productContainer.innerHTML = '<p>No products available at the moment.</p>';
+                    return;
+                }
                 
                 if (inventorySnapshot.empty) {
                     productContainer.innerHTML = '<p>No products available at the moment.</p>';
@@ -1025,110 +1053,122 @@
                 
                 // Render products
                 renderProducts();
-            } catch (error) {
-                console.error("Error loading inventory:", error);
-                productContainer.innerHTML = `<p>Error loading products: ${error.message}</p>`;
-            } finally {
-                productsSpinner.style.display = "none";
+                initializeAddonVisibility();
+            }  catch (error) {
+                    console.error("Error loading inventory:", error);
+                    productContainer.innerHTML = `<p class="error">Error loading products: ${error.message}</p>`;
+                } finally {
+                    productsSpinner.style.display = "none";
+                }
             }
-        }
 
-        async function loadAddOns() {
-            try {
-                const addOnsSnapshot = await db.collection("AddOn").get();
-                addOnsData = {};
-                addOnsSnapshot.forEach(doc => {
-                    addOnsData[doc.id] = {
-                        id: doc.id,
-                        name: doc.data().name,
-                        price: doc.data().value
-                    };
-                });
-            } catch (error) {
-                console.error("Error loading add-ons:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Add-Ons Error',
-                    text: 'Could not load add-ons. Please refresh the page.',
-                    confirmButtonColor: '#6B0D0D'
-                });
+            async function loadAddOns() {
+                try {
+                    const addOnsSnapshot = await db.collection("AddOn").get();
+                    addOnsData = {};
+                    addOnsSnapshot.forEach(doc => {
+                        addOnsData[doc.id] = {
+                            id: doc.id,
+                            name: doc.data().name,
+                            price: doc.data().value
+                        };
+                    });
+                } catch (error) {
+                    console.error("Error loading add-ons:", error);
+                    throw error; // Propagate the error to the main catch block
+                }
             }
-        }
         
         // Render products from inventory data
         function renderProducts() {
-    productContainer.innerHTML = '';
+            productContainer.innerHTML = '';
     
-    Object.values(inventoryData).forEach(product => {
-        const productElement = document.createElement('div');
-        productElement.className = 'product-card';
-        productElement.setAttribute('data-product-id', product.id);
-        
-        // Generate add-ons HTML from Firestore data
-        const addOnsHtml = Object.values(addOnsData).map(addOn => `
-            <label>
-                <input type="checkbox" 
-                       class="addon-checkbox" 
-                       name="addon-${product.id}" 
-                       value="${addOn.id}">
-                ${addOn.name} (+RM${addOn.price.toFixed(2)})
-            </label>
-        `).join('');
+            Object.values(inventoryData).forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product-card';
+                productElement.setAttribute('data-product-id', product.id);
+                
+                // Generate add-ons HTML
+                const addOnsHtml = Object.values(addOnsData).map(addOn => `
+                    <div class="addon-option">
+                        <label>
+                            <input type="checkbox" 
+                                class="addon-checkbox" 
+                                name="addon-${product.id}" 
+                                value="${addOn.id}"
+                                onchange="toggleAddonQuantity('${product.id}', '${addOn.id}')">
+                            ${addOn.name} (+RM${addOn.price.toFixed(2)})
+                        </label>
+                        <div class="addon-quantity-controls" id="${product.id}-${addOn.id}-qty-controls">
+                            <button class="quantity-btn" onclick="decreaseAddonQty('${product.id}', '${addOn.id}')">-</button>
+                            <input type="number" class="addon-qty-input" 
+                                id="${product.id}-${addOn.id}-qty" 
+                                value="1" min="1">
+                            <button class="quantity-btn" onclick="increaseAddonQty('${product.id}', '${addOn.id}')">+</button>
+                        </div>
+                    </div>
+                `).join('');
 
-        productElement.innerHTML = `
-            <div class="product-image">
-                <img src="${product.image}" alt="${product.name}">
-                ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ''}
-            </div>
-            <div class="product-info">
-                <h3 class="product-title">${product.name}</h3>
-                <p class="product-description">${product.description || 'Delicious ramen prepared with premium ingredients.'}</p>
-                <div class="product-meta">
-                    <div class="product-price">RM ${product.price.toFixed(2)}</div>
-                    <div class="product-availability">Available: ${product.quantity}</div>
-                </div>
-                <div class="order-options">
-                    <div class="quantity-selector">
-                        <label>Qty:</label>
-                        <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="decreaseQuantity('${product.id}')">-</button>
-                            <input type="number" class="quantity-input" id="${product.id}-qty" value="1" min="1" max="${product.quantity}">
-                            <button class="quantity-btn" onclick="increaseQuantity('${product.id}')">+</button>
-                        </div>
+                productElement.innerHTML = `
+                    <div class="product-image">
+                        <img src="${product.image}" alt="${product.name}">
+                        ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ''}
                     </div>
-                    <!-- Preparation Options -->
-                    <div class="preparation-selector">
-                        <label>Preparation:</label>
-                        <div class="preparation-options">
-                            <div class="radio-option">
-                                <input type="radio" id="packaging-${product.id}" name="preparation-${product.id}" value="packaging" checked>
-                                <label for="packaging-${product.id}">Packaging (Free)</label>
+                    <div class="product-info">
+                        <h3 class="product-title">${product.name}</h3>
+                        <p class="product-description">${product.description || 'Delicious ramen prepared with premium ingredients.'}</p>
+                        <div class="product-meta">
+                            <div class="product-price">RM ${product.price.toFixed(2)}</div>
+                            <div class="product-availability">Available: ${product.quantity}</div>
+                        </div>
+                        <div class="order-options">
+                            <div class="quantity-selector">
+                                <label>Qty:</label>
+                                <div class="quantity-controls">
+                                    <button class="quantity-btn" onclick="decreaseQuantity('${product.id}')">-</button>
+                                    <input type="number" class="quantity-input" id="${product.id}-qty" value="1" min="1" max="${product.quantity}">
+                                    <button class="quantity-btn" onclick="increaseQuantity('${product.id}')">+</button>
+                                </div>
                             </div>
-                            <div class="radio-option">
-                                <input type="radio" id="masak-${product.id}" name="preparation-${product.id}" value="masak">
-                                <label for="masak-${product.id}">Masak (+RM1.00)</label>
+                            <!-- Preparation Options -->
+                            <div class="preparation-selector">
+                                <label>Preparation:</label>
+                                <div class="preparation-options">
+                                    <div class="radio-option">
+                                        <input type="radio" id="packaging-${product.id}" name="preparation-${product.id}" value="packaging" checked>
+                                        <label for="packaging-${product.id}">Packaging (Free)</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" id="masak-${product.id}" name="preparation-${product.id}" value="masak">
+                                        <label for="masak-${product.id}">Masak (+RM1.00)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Dynamic Add-ons Section -->
+                            <div class="addon-selector">
+                                <label>Add-ons:</label>
+                                <div class="addon-options">
+                                    ${addOnsHtml}
+                                </div>
                             </div>
                         </div>
+                        <!-- Static Add to Cart Button -->
+                        <button class="static-cart-button" onclick="addToCart('${product.id}')" 
+                            ${product.quantity <= 0 ? 'disabled' : ''}>
+                            ${product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                        </button>
                     </div>
-                    <!-- Dynamic Add-ons Section -->
-                    <div class="addon-selector">
-                        <label>Add-ons:</label>
-                        <div class="addon-options">
-                            ${addOnsHtml}
-                        </div>
-                    </div>
-                </div>
-                <!-- Static Add to Cart Button -->
-                <button class="static-cart-button" onclick="addToCart('${product.id}')" 
-                    ${product.quantity <= 0 ? 'disabled' : ''}>
-                    ${product.quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
-                </button>
-            </div>
-        `;
-        
-        productContainer.appendChild(productElement);
-    });
-}
+                `;
+                
+                productContainer.appendChild(productElement);
+            });
+        }
+
+        function initializeAddonVisibility() {
+            document.querySelectorAll('.addon-quantity-controls').forEach(control => {
+                control.style.display = 'none';
+            });
+        }
 
         function increaseQuantity(productId) {
             const quantityInput = document.getElementById(`${productId}-qty`);
@@ -1196,11 +1236,11 @@
         
         // Add-ons prices
         let addOnsText = '';
-        item.addOns.forEach(addOnId => {
-            const addOn = addOnsData[addOnId];
-            if (addOn) {
-                itemPrice += addOn.price;
-                addOnsText += `${addOn.name} (+RM${addOn.price.toFixed(2)}), `;
+        item.addOns.forEach(addOnItem => {
+            const addOnData = addOnsData[addOnItem.id]; // ✅ Fixed naming
+            if (addOnData) {
+                itemPrice += addOnData.price * addOnItem.quantity;
+                addOnsText += `${addOnData.name} (x${addOnItem.quantity}) (+RM${(addOnData.price * addOnItem.quantity).toFixed(2)}), `;
             }
         });
         
@@ -1259,14 +1299,21 @@
             
             // Get preparation option and add-ons
             const preparationOption = document.querySelector(`input[name="preparation-${productId}"]:checked`).value;
-            const addOns = Array.from(document.querySelectorAll(`input[name="addon-${productId}"]:checked`))
-                .map(checkbox => checkbox.value);
+            const addOns = [];
+            document.querySelectorAll(`input[name="addon-${productId}"]:checked`).forEach(checkbox => {
+                const addOnId = checkbox.value;
+                const qtyInput = document.getElementById(`${productId}-${addOnId}-qty`);
+                addOns.push({
+                    id: addOnId,
+                    quantity: parseInt(qtyInput.value) || 1
+                });
+            });
 
             cart.push({
                 productId,
                 quantity,
                 preparationOption,
-                addOns // Add add-ons to cart item
+                addOns
             });
             
             // Show success toast notification
@@ -1341,44 +1388,41 @@
             };
 
             let itemsHtml = '';
-    cart.forEach(item => {
-        const product = inventoryData[item.productId];
-        let itemTotal = product.price * item.quantity;
-        
-        // Preparation price
-        if (item.preparationOption === 'masak') itemTotal += 1 * item.quantity;
+            cart.forEach(item => {
+                const product = inventoryData[item.productId];
+                let itemTotal = product.price * item.quantity;
+                
+                // Preparation price
+                const preparationText = item.preparationOption === 'masak' ? 
+                    'Cooked (+RM1.00)' : 'Packaging (Free)';
 
-        // Add-ons calculation
-        let addOnsHtml = '';
-        item.addOns.forEach(addOnId => {
-            const addOn = addOnsData[addOnId];
-            if (addOn) {
-                itemTotal += addOn.price * item.quantity;
-                addOnsHtml += `
-                    <div class="addon-item">
-                        <span>${addOn.name}</span>
-                        <span>+RM${(addOn.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                `;
-            }
-        });
+                // Add-ons calculation
+                let addOnsHtml = '';
+                item.addOns.forEach(addOnItem => {
+                    const addOnData = addOnsData[addOnItem.id];
+                    if (addOnData) {
+                        addOnsHtml += `
+                            <div class="addon-item">
+                                <span>${addOnData.name} (x${addOnItem.quantity})</span>
+                                <span>+RM${(addOnData.price * addOnItem.quantity).toFixed(2)}</span>
+                            </div>`;
+                    }
+                });
 
-        itemsHtml += `
-            <div class="order-item">
-                <div class="main-item">
-                    <span>${product.name} (${item.quantity}x)</span>
-                    <span>RM${(product.price * item.quantity).toFixed(2)}</span>
-                </div>
-                ${addOnsHtml ? `
-                <div class="addons-container">
-                    <div class="preparation-type">
-                        ${item.preparationOption === 'masak' ? 'Cooked' : 'Packaged'}
-                    </div>
-                    ${addOnsHtml}
-                </div>` : ''}
-            </div>
-        `;
-    });
+                itemsHtml += `
+                    <div class="order-item">
+                        <div class="main-item">
+                            <span>${product.name} (${item.quantity}x)</span>
+                            <span>RM${(product.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                        <div class="addons-container">
+                            <div class="preparation-type">
+                                ${preparationText}
+                            </div>
+                            ${addOnsHtml}
+                        </div>
+                    </div>`;
+            });
 
     // Update modal HTML
     summaryItems.innerHTML = `
@@ -1462,10 +1506,10 @@ async function submitOrder() {
             
             // Add add-ons price
             if (item.addOns && item.addOns.length > 0) {
-                item.addOns.forEach(addOnId => {
-                    const addOn = addOnsData[addOnId];
-                    if (addOn) {
-                        itemPrice += addOn.price;
+                item.addOns.forEach(addOn => {
+                    const addOnData = addOnsData[addOn.id];
+                    if (addOnData) {
+                        itemPrice += addOnData.price * addOn.quantity; // Multiply by quantity
                     }
                 });
             }
@@ -1591,13 +1635,12 @@ function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType
         
         // Check if item.addOns exists before using forEach
         if (item.addOns && item.addOns.length > 0) {
-            let addOnsText = '';
-            item.addOns.forEach(addOnId => {
-                const addOn = addOnsData[addOnId];
-                if (addOn) {
-                    addOnsText += `${addOn.name} (+RM${addOn.price.toFixed(2)}), `;
-                }
-            });
+            item.addOns.forEach(addOnItem => {
+            const addOnData = addOnsData[addOnItem.id];
+            if (addOnData) {
+                message += `   ${addOnData.name} (x${addOnItem.quantity}) (+RM${(addOnData.price * addOnItem.quantity).toFixed(2)})\n`;
+            }
+        });
             
             if (addOnsText) {
                 message += `   Add-ons: ${addOnsText.slice(0, -2)}\n`;
@@ -1675,6 +1718,32 @@ function openWhatsApp(message) {
             });
         }
     });
+}
+
+function toggleAddonQuantity(productId, addOnId) {
+    const checkbox = document.querySelector(`input[name="addon-${productId}"][value="${addOnId}"]`);
+    const qtyControls = document.getElementById(`${productId}-${addOnId}-qty-controls`);
+    // Fix this line (changed product.id to productId):
+    const qtyInput = document.getElementById(`${productId}-${addOnId}-qty`);
+
+    if (checkbox.checked) {
+        qtyControls.style.display = 'flex';
+    } else {
+        qtyControls.style.display = 'none';
+        qtyInput.value = 1; // Reset quantity when unchecked
+    }
+}
+
+function increaseAddonQty(productId, addOnId) {
+    const qtyInput = document.getElementById(`${productId}-${addOnId}-qty`);
+    qtyInput.value = parseInt(qtyInput.value) + 1;
+}
+
+function decreaseAddonQty(productId, addOnId) {
+    const qtyInput = document.getElementById(`${productId}-${addOnId}-qty`);
+    if (parseInt(qtyInput.value) > 1) {
+        qtyInput.value = parseInt(qtyInput.value) - 1;
+    }
 }
     </script>
 </body>

@@ -249,15 +249,16 @@
             font-weight: 500;
         }
         
-        .quantity-controls {
-            display: flex;
+        .quantity-controls, .addon-quantity-controls {
+            display: inline-flex;
             align-items: center;
             border: 1px solid #ddd;
             border-radius: 5px;
             overflow: hidden;
+            height: 36px;
         }
         
-        .quantity-btn {
+        .quantity-btn, .addon-quantity-btn {
             background-color: #f5f5f5;
             border: none;
             width: 36px;
@@ -271,7 +272,7 @@
             background-color: #e0e0e0;
         }
         
-        .quantity-input {
+        .quantity-input, .addon-qty-input  {
             width: 50px;
             height: 36px;
             border: none;
@@ -279,6 +280,7 @@
             border-right: 1px solid #ddd;
             text-align: center;
             font-size: 1rem;
+            padding: 0;
         }
         
         .addon-selector {
@@ -739,19 +741,18 @@
             }
 
             .addon-quantity-controls {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                margin-left: 1.5rem;
-                width: 15px;
+                margin-left: 0.8rem;
+                display: none; /* Hidden by default */
             }
 
             .addon-qty-input {
-                width: 15px;
-                text-align: center;
-                padding: 0.2rem;
-                border: 1px solid #ddd;
-                border-radius: 4px;
+                width: 50px;
+            height: 36px;
+            border: none;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            text-align: center;
+            font-size: 1rem;
             }
 
             .addon-options label {
@@ -1090,24 +1091,28 @@
                 
                 // Generate add-ons HTML
                 const addOnsHtml = Object.values(addOnsData).map(addOn => `
-                    <div class="addon-option">
-                        <label>
-                            <input type="checkbox" 
-                                class="addon-checkbox" 
-                                name="addon-${product.id}" 
-                                value="${addOn.id}"
-                                onchange="toggleAddonQuantity('${product.id}', '${addOn.id}')">
-                            ${addOn.name} (+RM${addOn.price.toFixed(2)})
-                        </label>
-                        <div class="addon-quantity-controls" id="${product.id}-${addOn.id}-qty-controls">
-                            <button class="quantity-btn" onclick="decreaseAddonQty('${product.id}', '${addOn.id}')">-</button>
-                            <input type="number" class="addon-qty-input" 
-                                id="${product.id}-${addOn.id}-qty" 
-                                value="1" min="1">
-                            <button class="quantity-btn" onclick="increaseAddonQty('${product.id}', '${addOn.id}')">+</button>
-                        </div>
-                    </div>
-                `).join('');
+<div class="addon-option">
+    <label>
+        <input type="checkbox" 
+               class="addon-checkbox" 
+               name="addon-${product.id}" 
+               value="${addOn.id}"
+               onchange="toggleAddonQuantity('${product.id}', '${addOn.id}')">
+        ${addOn.name} (+RM${addOn.price.toFixed(2)})
+    </label>
+    <div class="addon-quantity-controls" id="${product.id}-${addOn.id}-qty-controls">
+        <button class="addon-quantity-btn" 
+                onclick="decreaseAddonQty('${product.id}', '${addOn.id}')">-</button>
+        <input type="number" 
+               class="addon-qty-input" 
+               id="${product.id}-${addOn.id}-qty" 
+               value="1" 
+               min="1">
+        <button class="addon-quantity-btn" 
+                onclick="increaseAddonQty('${product.id}', '${addOn.id}')">+</button>
+    </div>
+</div>
+`).join('');
 
                 productElement.innerHTML = `
                     <div class="product-image">
@@ -1603,21 +1608,13 @@ async function submitOrder() {
 // Function to prepare WhatsApp message with order details
 // Function to prepare WhatsApp message with order details
 function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderItems) {
-    // Current date and time
-    const now = new Date();
-    const date = now.toLocaleDateString();
-    const time = now.toLocaleTimeString();
-    
-    // Calculate order total
-    let orderTotal = 0;
-    orderItems.forEach(item => {
-        orderTotal += item.totalPrice;
-    });
-    
-    // Construct message
+    // Initialize message FIRST
     let message = `🍜 *NEW ORDER FROM RAMEN SIBOX* 🍜\n\n`;
-    message += `*Date:* ${date}\n`;
-    message += `*Time:* ${time}\n\n`;
+    
+    // Now add content
+    const now = new Date();
+    message += `*Date:* ${now.toLocaleDateString()}\n`;
+    message += `*Time:* ${now.toLocaleTimeString()}\n\n`;
     message += `*Customer Name:* ${customerName}\n`;
     
     if (roomNumber) {
@@ -1627,30 +1624,28 @@ function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType
     message += `*Payment Method:* ${paymentType}\n`;
     message += `*Order Type:* ${orderType}\n\n`;
     message += `*ORDER DETAILS:*\n`;
+
+    // Calculate total while building message
+    let orderTotal = 0;
     
-    // Add each item to the message
     orderItems.forEach((item, index) => {
+        orderTotal += item.totalPrice;
         message += `${index + 1}. ${item.productName} (${item.quantity}x)\n`;
-        message += `   Preparation: ${item.preparationOption === 'masak' ? 'Cooked' : 'Packaging'}\n`;
-        
-        // Check if item.addOns exists before using forEach
-        if (item.addOns && item.addOns.length > 0) {
-            item.addOns.forEach(addOnItem => {
-            const addOnData = addOnsData[addOnItem.id];
-            if (addOnData) {
-                message += `   ${addOnData.name} (x${addOnItem.quantity}) (+RM${(addOnData.price * addOnItem.quantity).toFixed(2)})\n`;
-            }
-        });
-            
-            if (addOnsText) {
-                message += `   Add-ons: ${addOnsText.slice(0, -2)}\n`;
-            }
+        message += `   Preparation: ${item.preparationOption === 'masak' ? 'Cooked (+RM1.00)' : 'Packaging (Free)'}\n`;
+
+        if (item.addOns?.length) {
+            item.addOns.forEach(addOn => {
+                const addOnData = addOnsData[addOn.id];
+                if (addOnData) {
+                    message += `   ${addOnData.name} (x${addOn.quantity}) (+RM${(addOnData.price * addOn.quantity).toFixed(2)}\n`;
+                }
+            });
         }
         
-        message += `   RM ${item.totalPrice.toFixed(2)}\n\n`;
+        message += `   Total: RM ${item.totalPrice.toFixed(2)}\n\n`;
     });
-    
-    message += `\n*TOTAL: RM ${orderTotal.toFixed(2)}*\n\n`;
+
+    message += `\n*GRAND TOTAL: RM ${orderTotal.toFixed(2)}*\n\n`;
     message += `Thank you for your order! 🙏`;
     
     return encodeURIComponent(message);
@@ -1721,17 +1716,13 @@ function openWhatsApp(message) {
 }
 
 function toggleAddonQuantity(productId, addOnId) {
-    const checkbox = document.querySelector(`input[name="addon-${productId}"][value="${addOnId}"]`);
-    const qtyControls = document.getElementById(`${productId}-${addOnId}-qty-controls`);
-    // Fix this line (changed product.id to productId):
-    const qtyInput = document.getElementById(`${productId}-${addOnId}-qty`);
-
-    if (checkbox.checked) {
-        qtyControls.style.display = 'flex';
-    } else {
-        qtyControls.style.display = 'none';
-        qtyInput.value = 1; // Reset quantity when unchecked
-    }
+    const checkbox = document.querySelector(
+        `input[name="addon-${productId}"][value="${addOnId}"]`
+    );
+    const qtyControls = document.getElementById(
+        `${productId}-${addOnId}-qty-controls`
+    );
+    qtyControls.style.display = checkbox.checked ? 'inline-flex' : 'none';
 }
 
 function increaseAddonQty(productId, addOnId) {

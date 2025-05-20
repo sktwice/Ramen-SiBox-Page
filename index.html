@@ -850,7 +850,7 @@
     font-size: 0.85em;
     margin-bottom: 0.5rem;
 }
-        }
+        
     </style>
 </head>
 <body>
@@ -1459,7 +1459,16 @@ async function submitOrder() {
             // Calculate price with add-ons
             let itemPrice = product.price;
             if (item.preparationOption === 'masak') itemPrice += 1;
-            if (item.preparationOption === 'masak-telur') itemPrice += 2;
+            
+            // Add add-ons price
+            if (item.addOns && item.addOns.length > 0) {
+                item.addOns.forEach(addOnId => {
+                    const addOn = addOnsData[addOnId];
+                    if (addOn) {
+                        itemPrice += addOn.price;
+                    }
+                });
+            }
             
             const orderData = {
                 customer_name: customerName,
@@ -1468,6 +1477,7 @@ async function submitOrder() {
                 product_name: product.name,
                 quantity: item.quantity,
                 preparation_option: item.preparationOption,
+                add_ons: item.addOns || [], // Ensure addOns exists
                 unit_price: product.price,
                 total_price: itemPrice * item.quantity,
                 payment_type: paymentType,
@@ -1495,6 +1505,7 @@ async function submitOrder() {
                 productName: product.name,
                 quantity: item.quantity,
                 preparationOption: item.preparationOption,
+                addOns: item.addOns || [], // Ensure addOns exists in return data
                 totalPrice: itemPrice * item.quantity
             };
         });
@@ -1546,6 +1557,7 @@ async function submitOrder() {
 }
 
 // Function to prepare WhatsApp message with order details
+// Function to prepare WhatsApp message with order details
 function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType, orderItems) {
     // Current date and time
     const now = new Date();
@@ -1574,19 +1586,24 @@ function prepareWhatsAppMessage(customerName, roomNumber, paymentType, orderType
     
     // Add each item to the message
     orderItems.forEach((item, index) => {
-        let addOnsText = '';
-        item.addOns.forEach(addOnId => {
-            const addOn = addOnsData[addOnId];
-            if (addOn) {
-                addOnsText += `${addOn.name} (+RM${addOn.price.toFixed(2)}), `;
-            }
-        });
-        
         message += `${index + 1}. ${item.productName} (${item.quantity}x)\n`;
-        message += `   Preparation: ${item.preparationOption}\n`;
-        if (addOnsText) {
-            message += `   Add-ons: ${addOnsText.slice(0, -2)}\n`;
+        message += `   Preparation: ${item.preparationOption === 'masak' ? 'Cooked' : 'Packaging'}\n`;
+        
+        // Check if item.addOns exists before using forEach
+        if (item.addOns && item.addOns.length > 0) {
+            let addOnsText = '';
+            item.addOns.forEach(addOnId => {
+                const addOn = addOnsData[addOnId];
+                if (addOn) {
+                    addOnsText += `${addOn.name} (+RM${addOn.price.toFixed(2)}), `;
+                }
+            });
+            
+            if (addOnsText) {
+                message += `   Add-ons: ${addOnsText.slice(0, -2)}\n`;
+            }
         }
+        
         message += `   RM ${item.totalPrice.toFixed(2)}\n\n`;
     });
     

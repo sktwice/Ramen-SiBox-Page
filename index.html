@@ -1540,13 +1540,13 @@ async function submitOrder() {
             console.log("Order created with ID:", orderRef.id);
             
             // Update inventory quantity
-            const productRef = db.collection("Inventory").doc(item.productId);
-            await productRef.update({
-                quantity: firebase.firestore.FieldValue.increment(-item.quantity)
-            });
+            //const productRef = db.collection("Inventory").doc(item.productId);
+            //await productRef.update({
+            //    quantity: firebase.firestore.FieldValue.increment(-item.quantity)
+            //});
             
             // Update local inventory data
-            inventoryData[item.productId].quantity -= item.quantity;
+            //inventoryData[item.productId].quantity -= item.quantity;
             
             return {
                 orderId: orderRef.id,
